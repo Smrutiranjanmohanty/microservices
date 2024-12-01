@@ -14,41 +14,44 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: Check AWS Region
+        run: echo "AWS Region is ${{ secrets.AWS_REGION }}"
 
-    - name: Log in to Amazon ECR
-      uses: aws-actions/amazon-ecr-login@v1
+    # - name: Checkout Code
+    #   uses: actions/checkout@v3
 
-    - name: Build and Push Docker Images for All Microservices
-      env:
-        AWS_REGION: ${{ secrets.AWS_REGION }}
-      run: |
-        # Retrieve AWS Account ID
-        ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+    # - name: Log in to Amazon ECR
+    #   uses: aws-actions/amazon-ecr-login@v1
+
+    # - name: Build and Push Docker Images for All Microservices
+    #   env:
+    #     AWS_REGION: ${{ secrets.AWS_REGION }}
+    #   run: |
+    #     # Retrieve AWS Account ID
+    #     ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
         
-        # Set the ECR repository name (single repository for all microservices)
-        REPO_NAME="smrutisw2001"
+    #     # Set the ECR repository name (single repository for all microservices)
+    #     REPO_NAME="smrutisw2001"
         
-        # Loop through each microservice folder with a Dockerfile
-        for DOCKERFILE in $(find src -name Dockerfile); do
-          # Extract the microservice name (name of the folder containing the Dockerfile)
-          SERVICE=$(basename $(dirname $DOCKERFILE))
+    #     # Loop through each microservice folder with a Dockerfile
+    #     for DOCKERFILE in $(find src -name Dockerfile); do
+    #       # Extract the microservice name (name of the folder containing the Dockerfile)
+    #       SERVICE=$(basename $(dirname $DOCKERFILE))
           
-          # Define the image tag
-          IMAGE_TAG="$SERVICE:latest"  # You can use any custom tag here (e.g., v1.0.0, build123)
+    #       # Define the image tag
+    #       IMAGE_TAG="$SERVICE:latest"  # You can use any custom tag here (e.g., v1.0.0, build123)
           
-          # Define ECR URI
-          ECR_URI="$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com/$REPO_NAME"
+    #       # Define ECR URI
+    #       ECR_URI="$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com/$REPO_NAME"
           
-          echo "Building and pushing image for service: $SERVICE"
+    #       echo "Building and pushing image for service: $SERVICE"
           
-          # Build the Docker image
-          docker build -t $SERVICE:latest $(dirname $DOCKERFILE)
+    #       # Build the Docker image
+    #       docker build -t $SERVICE:latest $(dirname $DOCKERFILE)
           
-          # Tag the Docker image for ECR
-          docker tag $SERVICE:latest $ECR_URI:$IMAGE_TAG
+    #       # Tag the Docker image for ECR
+    #       docker tag $SERVICE:latest $ECR_URI:$IMAGE_TAG
           
-          # Push the Docker image to ECR
-          docker push $ECR_URI:$IMAGE_TAG
-        done
+    #       # Push the Docker image to ECR
+    #       docker push $ECR_URI:$IMAGE_TAG
+    #     done

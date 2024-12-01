@@ -14,9 +14,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check AWS Region
-        run: echo "AWS Region is ${{ secrets.AWS_REGION }}"
-
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          region: ${{ secrets.AWS_REGION }}
+      
     # - name: Checkout Code
     #   uses: actions/checkout@v3
 

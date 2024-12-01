@@ -52,3 +52,5 @@ jobs:
           # Push the Docker image to ECR
           docker push $ECR_URI:$IMAGE_TAG
         done
+          # complete
+          

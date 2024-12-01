@@ -7,7 +7,7 @@ on:
   push:
     paths:
       - 'src/**/Dockerfile'  # Trigger when any Dockerfile changes
-      - '.github/workflows/docker-build-push.yml'  # Trigger if the workflow file changes
+      - '.github/workflows/ci.yaml'  # Trigger if the workflow file changes
 
 jobs:
   build-and-push:

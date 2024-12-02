@@ -1,3 +1,11 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    paths:
+      - src/**/Dockerfile
+      - .github/workflows/ci.yaml
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest

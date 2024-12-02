@@ -16,35 +16,33 @@ jobs:
       AWS_REGION: ${{ secrets.AWS_REGION }}
 
     steps:
-      - name: Checkout code
+      - name: Checkout SCM
         uses: actions/checkout@v3
 
-      - name: Verify AWS Credentials (Debugging Step)
-        run: |
-          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}"
-          echo "AWS_REGION=${{ secrets.AWS_REGION }}"
-
-      - name: ECR login
-        uses: aws-actions/amazon-ecr-login@v2
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Build and Push Docker Images
+      - name: Log in to Amazon ECR using AWS CLI
         run: |
           # Retrieve AWS Account ID
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          
+          # Authenticate Docker to the ECR registry
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
+      - name: Build and Push Docker Images
+        run: |
           # Loop through each microservice folder with a Dockerfile
           for DOCKERFILE in $(find src -name Dockerfile); do
             # Extract the microservice name (name of the folder containing the Dockerfile)
             SERVICE=$(basename $(dirname $DOCKERFILE))
-            # Define the image tag
             IMAGE_TAG="$SERVICE:latest"  # You can use any custom tag here (e.g., v1.0.0, build123)
             
-            # Define ECR repository name for the service
             REPO_NAME="$SERVICE"
-            
-            # Define ECR URI for the service
             ECR_URI="$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com/$REPO_NAME"
             
             echo "Building and pushing image for service: $SERVICE to ECR repo: $REPO_NAME"

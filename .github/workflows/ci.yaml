@@ -1,4 +1,4 @@
-name: Build and Push Docker Images
+name: CI for Build & Push Docker Images
 
 on:
   push:
@@ -11,15 +11,68 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the source code
       - name: Checkout Source Code
         uses: actions/checkout@v3
 
+      # Step 2: Install AWS CLI (optional, if not pre-installed)
+      - name: Install AWS CLI
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+
+      # Step 3: Set AWS Credentials
       - name: Set AWS Credentials
         run: |
           export AWS_ACCESS_KEY_ID=ASIATFVAV3TBIKRJTWQL
           export AWS_SECRET_ACCESS_KEY=yJ/H3MERekDmwesTWozN62duzoeI8iJZzCpQoTDr
-          export AWS_REGION=ap-southeast-1
+          export AWS_REGION=ap-south-1
 
+      # Step 4: Debug AWS Environment Variables
+      - name: Debug AWS Environment Variables
+        run: |
+          echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID"
+          echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"
+          echo "AWS_REGION=$AWS_REGION"
+
+      # Step 5: Login to Amazon ECR
       - name: Login to Amazon ECR
         run: |
-          aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin 218306567362.dkr.ecr.ap-southeast-1.amazonaws.com
+          aws ecr get-login-password --region ap-south-1 | \
+          docker login --username AWS --password-stdin 218306567362.dkr.ecr.ap-south-1.amazonaws.com
+
+      # Step 6: Build and Push Docker Images
+      - name: Build and Push Docker Images
+        run: |
+          # Retrieve AWS Account ID
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+          # Loop through each microservice folder with a Dockerfile
+          for DOCKERFILE in $(find src -name Dockerfile); do
+            # Extract the microservice name (name of the folder containing the Dockerfile)
+            SERVICE=$(basename $(dirname $DOCKERFILE))
+            # Define the image tag
+            IMAGE_TAG="$SERVICE:latest"
+            
+            # Define ECR repository name for the service
+            REPO_NAME="$SERVICE"
+            
+            # Define ECR URI for the service
+            ECR_URI="$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com/$REPO_NAME"
+            
+            echo "Building and pushing image for service: $SERVICE to ECR repo: $REPO_NAME"
+            
+            # Check if the ECR repository exists, if not, create it
+            aws ecr describe-repositories --repository-names $REPO_NAME || \
+            aws ecr create-repository --repository-name $REPO_NAME
+
+            # Build the Docker image
+            docker build -t $SERVICE:latest $(dirname $DOCKERFILE)
+            
+            # Tag the Docker image for ECR
+            docker tag $SERVICE:latest $ECR_URI:$IMAGE_TAG
+            
+            # Push the Docker image to the respective ECR repository
+            docker push $ECR_URI:$IMAGE_TAG
+          done

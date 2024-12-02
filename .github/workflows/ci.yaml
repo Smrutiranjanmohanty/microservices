@@ -15,12 +15,17 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v3
 
-      # Step 2: Install AWS CLI (optional, if not pre-installed)
+      # Step 2: Install AWS CLI (if not already installed)
       - name: Install AWS CLI
         run: |
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./aws/install
+          if ! command -v aws &> /dev/null; then
+            echo "AWS CLI not found, installing..."
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+          else
+            echo "AWS CLI already installed."
+          fi
 
       # Step 3: Set AWS Credentials
       - name: Set AWS Credentials

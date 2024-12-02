@@ -27,24 +27,23 @@ jobs:
             echo "AWS CLI already installed."
           fi
 
-      # Step 3: Set AWS Credentials
-      - name: Set AWS Credentials
-        run: |
-          export AWS_ACCESS_KEY_ID=ASIATFVAV3TBIKRJTWQL
-          export AWS_SECRET_ACCESS_KEY=yJ/H3MERekDmwesTWozN62duzoeI8iJZzCpQoTDr
-          export AWS_REGION=ap-south-1
+      # Step 3: Configure AWS Credentials from Secrets
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       # Step 4: Debug AWS Environment Variables
       - name: Debug AWS Environment Variables
         run: |
-          echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID"
-          echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY"
-          echo "AWS_REGION=$AWS_REGION"
-
+          echo "Using AWS Region: ${{ secrets.AWS_REGION }}"
+      
       # Step 5: Login to Amazon ECR
       - name: Login to Amazon ECR
         run: |
-          aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 218306567362.dkr.ecr.ap-south-1.amazonaws.com
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query Account --output text).dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
       # Step 6: Build and Push Docker Images
       - name: Build and Push Docker Images
@@ -63,7 +62,7 @@ jobs:
             REPO_NAME="$SERVICE"
             
             # Define ECR URI for the service
-            ECR_URI="$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com/$REPO_NAME"
+            ECR_URI="$ACCOUNT_ID.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/$REPO_NAME"
             
             echo "Building and pushing image for service: $SERVICE to ECR repo: $REPO_NAME"
             

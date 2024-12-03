@@ -1,10 +1,11 @@
 name: CI for Build & Push Docker Images
-
 on:
   push:
     paths:
       - src/**/Dockerfile
       - .github/workflows/ci.yaml
+
+
 
 jobs:
   build-and-push:
@@ -20,12 +21,12 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       # Step 3: Login to Amazon ECR
-      - name: Login to Amazon ECR
-        id: login-ecr
+      - id: login-ecr
+        name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
       # # Step 4: Build and Push Docker Images
       # - name: Build and Push Docker Images

@@ -28,23 +28,23 @@ jobs:
         name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      # Step 4: Build and Push Docker Images
-      - name: Build and Push Docker Images
-        run: |
-          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      # # Step 4: Build and Push Docker Images
+      # - name: Build and Push Docker Images
+      #   run: |
+      #     ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
-          for DOCKERFILE in $(find src -name Dockerfile); do
-            SERVICE=$(basename $(dirname $DOCKERFILE))
-            IMAGE_TAG="$SERVICE:latest"
-            REPO_NAME="$SERVICE"
-            ECR_URI="$ACCOUNT_ID.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/$REPO_NAME"
+      #     for DOCKERFILE in $(find src -name Dockerfile); do
+      #       SERVICE=$(basename $(dirname $DOCKERFILE))
+      #       IMAGE_TAG="$SERVICE:latest"
+      #       REPO_NAME="$SERVICE"
+      #       ECR_URI="$ACCOUNT_ID.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/$REPO_NAME"
             
-            echo "Building and pushing image for service: $SERVICE to ECR repo: $REPO_NAME"
+      #       echo "Building and pushing image for service: $SERVICE to ECR repo: $REPO_NAME"
             
-            aws ecr describe-repositories --repository-names $REPO_NAME || \
-            aws ecr create-repository --repository-name $REPO_NAME
+      #       aws ecr describe-repositories --repository-names $REPO_NAME || \
+      #       aws ecr create-repository --repository-name $REPO_NAME
 
-            docker build -t $SERVICE:latest $(dirname $DOCKERFILE)
-            docker tag $SERVICE:latest $ECR_URI:$IMAGE_TAG
-            docker push $ECR_URI:$IMAGE_TAG
-          done
+      #       docker build -t $SERVICE:latest $(dirname $DOCKERFILE)
+      #       docker tag $SERVICE:latest $ECR_URI:$IMAGE_TAG
+      #       docker push $ECR_URI:$IMAGE_TAG
+      #     done
